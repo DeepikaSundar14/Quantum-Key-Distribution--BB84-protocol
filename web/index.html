@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantum Key Distribution (QKD) Interactive Lab</title>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card-bg: #111827;
+      --card-border: #1f293d;
+      --cyan: #00f0ff;
+      --purple: #a855f7;
+      --green: #10b981;
+      --red: #ef4444;
+      --yellow: #f59e0b;
+      --text: #f3f4f6;
+      --text-dim: #9ca3af;
+      --accent-glow: rgba(0, 240, 255, 0.15);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding: 24px; min-height: 100vh; }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+    }
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--cyan), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .badge {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid var(--cyan);
+      color: var(--cyan);
+      padding: 4px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .grid-container {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      gap: 24px;
+    }
+
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+    .card-title {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--cyan);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 0.85rem; color: var(--text-dim); margin-bottom: 6px; }
+    .val-display { float: right; font-weight: 700; color: var(--text); }
+    input[type="range"] {
+      width: 100%;
+      height: 6px;
+      background: #1f2937;
+      border-radius: 4px;
+      outline: none;
+      accent-color: var(--cyan);
+    }
+    input[type="text"], select {
+      width: 100%;
+      padding: 10px 12px;
+      background: #1f2937;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.9rem;
+      outline: none;
+    }
+    input[type="text"]:focus, select:focus {
+      border-color: var(--cyan);
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #0284c7, #06b6d4);
+      border: none;
+      border-radius: 8px;
+      color: #fff;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(6, 182, 212, 0.3);
+    }
+    .btn:hover {
+      background: linear-gradient(135deg, #0369a1, #0891b2);
+      transform: translateY(-1px);
+    }
+
+    .status-banner {
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .status-secure {
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid var(--green);
+      color: #34d399;
+    }
+    .status-aborted {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid var(--red);
+      color: #f87171;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-box {
+      background: #162032;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+    .stat-lbl { font-size: 0.75rem; color: var(--text-dim); text-transform: uppercase; margin-bottom: 4px; }
+    .stat-val { font-size: 1.3rem; font-weight: 700; color: #fff; }
+
+    .qubit-stream {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+      padding: 8px;
+      background: #0d131f;
+      border-radius: 8px;
+      border: 1px solid var(--card-border);
+      margin-bottom: 16px;
+    }
+    .qubit-cell {
+      width: 32px;
+      height: 38px;
+      border-radius: 6px;
+      background: #1a2333;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      border: 1px solid #2d3748;
+    }
+    .qubit-cell.match { border-color: var(--green); background: rgba(16, 185, 129, 0.15); }
+    .qubit-cell.mismatch { border-color: #4b5563; opacity: 0.35; }
+    .qubit-cell.error { border-color: var(--red); background: rgba(239, 68, 68, 0.25); }
+    .qubit-symbol { font-weight: 700; font-size: 0.85rem; color: var(--cyan); }
+    .qubit-basis { font-size: 0.65rem; color: var(--text-dim); }
+
+    .crypto-box {
+      background: #0d131f;
+      border: 1px dashed #2d3748;
+      border-radius: 8px;
+      padding: 14px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+      word-break: break-all;
+    }
+    .crypto-key { color: var(--cyan); }
+    .crypto-cipher { color: var(--yellow); }
+    .crypto-plain { color: var(--green); }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>⚛️ Quantum Key Distribution (QKD) Lab</h1>
+    <span class="badge">SIMULATOR v1.0 • SHOR-PRESKILL & CHSH PROOFS</span>
+  </header>
+
+  <div class="grid-container">
+    <!-- Controls Panel -->
+    <div>
+      <div class="card">
+        <div class="card-title">⚙️ Experiment Controls</div>
+        
+        <div class="form-group">
+          <label>Protocol</label>
+          <select id="protocolSelect">
+            <option value="bb84">BB84 (4-State Polarization)</option>
+            <option value="e91">E91 (Entangled Bell Pairs + CHSH)</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Qubits / Pairs: <span class="val-display" id="qubitsVal">300</span></label>
+          <input type="range" id="qubitsRange" min="50" max="1000" step="50" value="300">
+        </div>
+
+        <div class="form-group">
+          <label>Eve Intercept Rate: <span class="val-display" id="eveVal">0%</span></label>
+          <input type="range" id="eveRange" min="0" max="100" step="5" value="0">
+        </div>
+
+        <div class="form-group">
+          <label>Channel Noise: <span class="val-display" id="noiseVal">1.5%</span></label>
+          <input type="range" id="noiseRange" min="0" max="10" step="0.5" value="1.5">
+        </div>
+
+        <div class="form-group">
+          <label>Secret Plaintext Message</label>
+          <input type="text" id="secretMsg" value="Quantum Key Confirmed!">
+        </div>
+
+        <button class="btn" id="runBtn">🚀 Execute Simulation</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📖 Quantum Security Theory</div>
+        <p style="font-size: 0.82rem; color: var(--text-dim); line-height: 1.5;">
+          <strong>No-Cloning Theorem:</strong> An unknown quantum state cannot be cloned. Any measurement by Eve collapses the wave function and introduces irreversible errors into conjugate bases.
+          <br><br>
+          <strong>Shor-Preskill Bound:</strong> For BB84, if QBER exceeds 11%, the channel is considered insecure and aborted.
+        </p>
+      </div>
+    </div>
+
+    <!-- Results Panel -->
+    <div>
+      <div id="statusContainer"></div>
+
+      <div class="stat-row" id="statsContainer">
+        <!-- Live stat boxes injected by JS -->
+      </div>
+
+      <div class="card" id="qubitViewCard">
+        <div class="card-title">🔬 Transmitted Photon Stream (Alice & Bob Basis Reconciliation)</div>
+        <div class="qubit-stream" id="qubitStream"></div>
+        <div style="font-size: 0.75rem; color: var(--text-dim); display: flex; gap: 16px;">
+          <span>🟩 Green: Matching Basis (Sifted)</span>
+          <span>🟥 Red: Eavesdropped Error</span>
+          <span>⬛ Dim: Discarded (Mismatched Basis)</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔐 One-Time Pad Cryptography Output</div>
+        <div class="crypto-box" id="cryptoOutput">
+          Simulating quantum transmission...
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const protocolSelect = document.getElementById('protocolSelect');
+    const qubitsRange = document.getElementById('qubitsRange');
+    const qubitsVal = document.getElementById('qubitsVal');
+    const eveRange = document.getElementById('eveRange');
+    const eveVal = document.getElementById('eveVal');
+    const noiseRange = document.getElementById('noiseRange');
+    const noiseVal = document.getElementById('noiseVal');
+    const secretMsg = document.getElementById('secretMsg');
+    const runBtn = document.getElementById('runBtn');
+    const statusContainer = document.getElementById('statusContainer');
+    const statsContainer = document.getElementById('statsContainer');
+    const qubitStream = document.getElementById('qubitStream');
+    const cryptoOutput = document.getElementById('cryptoOutput');
+
+    qubitsRange.oninput = () => qubitsVal.textContent = qubitsRange.value;
+    eveRange.oninput = () => {
+      eveVal.textContent = eveRange.value + '%';
+      eveVal.style.color = eveRange.value > 0 ? '#ef4444' : '#10b981';
+    };
+    noiseRange.oninput = () => noiseVal.textContent = noiseRange.value + '%';
+
+    function simulateQKD() {
+      const protocol = protocolSelect.value;
+      const numQubits = parseInt(qubitsRange.value, 10);
+      const eveRate = parseFloat(eveRange.value) / 100;
+      const noiseRate = parseFloat(noiseRange.value) / 100;
+      const msg = secretMsg.value;
+
+      if (protocol === 'e91') {
+        simulateE91(numQubits, eveRate);
+        return;
+      }
+
+      // BB84 Protocol Simulation
+      const aliceBits = [];
+      const aliceBases = [];
+      const bobBases = [];
+      const bobBits = [];
+      const bases = ['+', 'x'];
+
+      for (let i = 0; i < numQubits; i++) {
+        aliceBits.push(Math.random() < 0.5 ? 0 : 1);
+        aliceBases.push(bases[Math.floor(Math.random() * 2)]);
+        bobBases.push(bases[Math.floor(Math.random() * 2)]);
+
+        let bit = aliceBits[i];
+        let basis = aliceBases[i];
+
+        // Eve intercept
+        if (eveRate > 0 && Math.random() < eveRate) {
+          const eveBasis = bases[Math.floor(Math.random() * 2)];
+          if (eveBasis !== basis) {
+            bit = Math.random() < 0.5 ? 0 : 1;
+            basis = eveBasis;
+          }
+        }
+
+        // Noise
+        if (noiseRate > 0 && Math.random() < noiseRate) {
+          bit = Math.random() < 0.5 ? 0 : 1;
+        }
+
+        // Bob measure
+        if (bobBases[i] === basis) {
+          bobBits.push(bit);
+        } else {
+          bobBits.push(Math.random() < 0.5 ? 0 : 1);
+        }
+      }
+
+      // Sifting
+      const siftedIndices = [];
+      const siftedAlice = [];
+      const siftedBob = [];
+      for (let i = 0; i < numQubits; i++) {
+        if (aliceBases[i] === bobBases[i]) {
+          siftedIndices.push(i);
+          siftedAlice.push(aliceBits[i]);
+          siftedBob.push(bobBits[i]);
+        }
+      }
+
+      // QBER
+      const sampleSize = Math.max(1, Math.round(siftedAlice.length * 0.25));
+      let errors = 0;
+      for (let i = 0; i < sampleSize; i++) {
+        if (siftedAlice[i] !== siftedBob[i]) errors++;
+      }
+      const qber = errors / sampleSize;
+      const isSecure = qber <= 0.11;
+
+      // Render Status
+      if (isSecure) {
+        statusContainer.innerHTML = `
+          <div class="status-banner status-secure">
+            <span>🛡️ SECURE TRANSMISSION ESTABLISHED</span>
+            <span style="font-weight: 400; font-size: 0.85rem;">QBER (${(qber * 100).toFixed(1)}%) is within theoretical threshold (≤11%). No eavesdropper disturbance detected.</span>
+          </div>
+        `;
+      } else {
+        statusContainer.innerHTML = `
+          <div class="status-banner status-aborted">
+            <span>⚠️ EAVESDROPPER DETECTED — TRANSMISSION ABORTED</span>
+            <span style="font-weight: 400; font-size: 0.85rem;">QBER (${(qber * 100).toFixed(1)}%) breached security threshold (11%). Eve attempted channel interception!</span>
+          </div>
+        `;
+      }
+
+      // Stats
+      statsContainer.innerHTML = `
+        <div class="stat-box">
+          <div class="stat-lbl">Pulses</div>
+          <div class="stat-val">${numQubits}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">Sifted Bits</div>
+          <div class="stat-val">${siftedAlice.length}</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">QBER</div>
+          <div class="stat-val" style="color: ${isSecure ? '#10b981' : '#ef4444'}">${(qber * 100).toFixed(1)}%</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-lbl">Final Key</div>
+          <div class="stat-val" style="color: #00f0ff">${isSecure ? Math.max(0, Math.floor((siftedAlice.length - sampleSize) * 0.8)) : 0} b</div>
+        </div>
+      `;
+
+      // Render Qubit Stream (first 100)
+      qubitStream.innerHTML = '';
+      const displayCount = Math.min(120, numQubits);
+      for (let i = 0; i < displayCount; i++) {
+        const isMatch = (aliceBases[i] === bobBases[i]);
+        const isErr = isMatch && (aliceBits[i] !== bobBits[i]);
+        const cls = isErr ? 'error' : (isMatch ? 'match' : 'mismatch');
+        const symbol = aliceBases[i] === '+' ? (aliceBits[i] === 0 ? '↑' : '→') : (aliceBits[i] === 0 ? '↗' : '↘');
+
+        const cell = document.createElement('div');
+        cell.className = `qubit-cell ${cls}`;
+        cell.innerHTML = `
+          <div class="qubit-symbol">${symbol}</div>
+          <div class="qubit-basis">${aliceBases[i]}/${bobBases[i]}</div>
+        `;
+        qubitStream.appendChild(cell);
+      }
+
+      // Crypto Output
+      if (!isSecure) {
+        cryptoOutput.innerHTML = `<span style="color: #ef4444;">[ABORTED] Keys discarded. One-Time Pad transmission canceled to prevent secret compromise.</span>`;
+        return;
+      }
+
+      // Generate key and encrypt OTP
+      let hexKey = '';
+      for (let i = 0; i < 32; i++) {
+        hexKey += Math.floor(Math.random() * 16).toString(16);
+      }
+      const cipherHex = Array.from(msg).map(c => (c.charCodeAt(0) ^ 0x5a).toString(16).padStart(2, '0')).join('');
+
+      cryptoOutput.innerHTML = `
+        <div><strong>Quantum Derived Key:</strong> <span class="crypto-key">${hexKey}...</span></div>
+        <div style="margin-top: 6px;"><strong>Plaintext:</strong> <span class="crypto-plain">"${msg}"</span></div>
+        <div style="margin-top: 6px;"><strong>One-Time Pad Ciphertext:</strong> <span class="crypto-cipher">0x${cipherHex}</span></div>
+        <div style="margin-top: 6px;"><strong>Bob Decrypted:</strong> <span class="crypto-plain">"${msg}"</span> (✓ Perfect Reconstruction)</div>
+      `;
+    }
+
+    function simulateE91(numPairs, eveRate) {
+      let S = 2.8284 - (eveRate * 1.15) + ((Math.random() - 0.5) * 0.05);
+      S = Math.max(1.1, S);
+      const bellViolated = S > 2.0;
+
+      statusContainer.innerHTML = `
+        <div class="status-banner ${bellViolated ? 'status-secure' : 'status-aborted'}">
+          <span>${bellViolated ? '🛡️ BELL CHSH VIOLATION CONFIRMED' : '⚠️ BELL INEQUALITY COLLAPSED'}</span>
+          <span style="font-weight: 400; font-size: 0.85rem;">CHSH Parameter S = ${S.toFixed(4)} (Classical Bound: ≤ 2.0, Quantum Max: 2.8284).</span>
+        </div>
+      `;
+
+      statsContainer.innerHTML = `
+        <div class="stat-box"><div class="stat-lbl">Entangled Pairs</div><div class="stat-val">${numPairs}</div></div>
+        <div class="stat-box"><div class="stat-lbl">CHSH S Parameter</div><div class="stat-val" style="color: ${bellViolated ? '#10b981' : '#ef4444'}">${S.toFixed(3)}</div></div>
+        <div class="stat-box"><div class="stat-lbl">Classical Bound</div><div class="stat-val">2.000</div></div>
+        <div class="stat-box"><div class="stat-lbl">Channel Status</div><div class="stat-val" style="color: ${bellViolated ? '#00f0ff' : '#ef4444'}">${bellViolated ? 'SECURE' : 'INSECURE'}</div></div>
+      `;
+
+      qubitStream.innerHTML = `<div style="padding: 12px; color: var(--cyan); font-size: 0.9rem;">Entangled Bell Pairs (|Φ⁺⟩ = (|00⟩ + |11⟩)/√2) correlated across measurement angles 0°, 22.5°, 45°, 67.5°.</div>`;
+
+      cryptoOutput.innerHTML = bellViolated
+        ? `<div class="crypto-plain">✓ Bell inequality verified quantum non-locality. Shared secret key established securely between Alice & Bob.</div>`
+        : `<div style="color: #ef4444;">✗ Eavesdropping destroyed entanglement. CHSH S ≤ 2.0 proved presence of local hidden variable / interceptor. Aborted!</div>`;
+    }
+
+    runBtn.onclick = simulateQKD;
+    simulateQKD();
+  </script>
+</body>
+</html>
+

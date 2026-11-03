@@ -1,0 +1,30 @@
+{
+  "name": "quantum-key-distribution",
+  "version": "1.0.0",
+  "description": "Comprehensive Quantum Key Distribution (QKD) Simulator & Cryptographic Suite implementing BB84, B92, E91 (CHSH Bell Test), Cascade Error Reconciliation, and One-Time Pad Encryption.",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/cli.js",
+    "simulate": "node src/cli.js --qubits 1000 --eve 0.0",
+    "simulate:eve": "node src/cli.js --qubits 1000 --eve 0.35",
+    "simulate:e91": "node src/cli.js --protocol e91 --pairs 800",
+    "git:init": "node scripts/git-setup.js",
+    "test": "node --test tests/node/**/*.test.js",
+    "web": "node web/serve.js"
+  },
+  "keywords": [
+    "quantum-computing",
+    "qkd",
+    "bb84",
+    "e91",
+    "b92",
+    "cryptography",
+    "one-time-pad",
+    "quantum-key-distribution",
+    "bell-inequality",
+    "chsh"
+  ],
+  "author": "Quantum Cryptography Lab",
+  "license": "MIT",
+  "type": "commonjs"
+}

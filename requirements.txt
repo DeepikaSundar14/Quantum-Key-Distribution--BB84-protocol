@@ -1,0 +1,6 @@
+# Pure Python implementation has zero required external dependencies!
+# Optional packages for extended scientific visualization & quantum SDK integration:
+numpy>=1.24.0
+matplotlib>=3.7.0
+pytest>=7.0.0
+
